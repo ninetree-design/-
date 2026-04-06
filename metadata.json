@@ -1,0 +1,7 @@
+{
+  "name": "나인트리디자인 (Nine Tree Design)",
+  "description": "로고 디자인 및 반응형 홈페이지 제작 전문 에이전시",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
