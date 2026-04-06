@@ -1,15 +1,18 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Layout, Briefcase, Save, Plus, Trash2, Upload, X, Edit2, Image as ImageIcon } from 'lucide-react';
+import { Settings, Layout, Briefcase, Save, Plus, Trash2, Upload, X, Edit2, Image as ImageIcon, LogOut } from 'lucide-react';
 import { initialConfig, initialServices, PortfolioItem, ServiceItem, SiteConfig } from '@/src/constants';
 import { saveImage, deleteImage, getImageUrl } from '@/src/lib/storage';
 import { getStoredPortfolio, savePortfolio } from '@/src/lib/portfolioService';
 import { useConfigContext } from '@/src/context/ConfigContext';
 
 const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/800x600?text=No+Image';
+const ADMIN_PASSWORD = '926490';
 
 export default function AdminDashboard() {
   const { config, updateConfig } = useConfigContext();
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [passwordInput, setPasswordInput] = React.useState('');
   const [activeTab, setActiveTab] = React.useState('general');
   const [settings, setSettings] = React.useState<SiteConfig>(config);
   const [portfolio, setPortfolio] = React.useState<PortfolioItem[]>([]);
@@ -27,6 +30,11 @@ export default function AdminDashboard() {
   });
 
   React.useEffect(() => {
+    const auth = localStorage.getItem('ninetree_admin_auth');
+    if (auth === 'true') {
+      setIsAuthenticated(true);
+    }
+
     const storedPortfolio = getStoredPortfolio();
     setPortfolio(storedPortfolio);
     
@@ -53,6 +61,21 @@ export default function AdminDashboard() {
     };
     resolve();
   }, [portfolio]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('ninetree_admin_auth');
+    setIsAuthenticated(false);
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      localStorage.setItem('ninetree_admin_auth', 'true');
+      setIsAuthenticated(true);
+    } else {
+      alert('비밀번호가 틀렸습니다. 접근 불가.');
+    }
+  };
 
   const handleSave = () => {
     updateConfig(settings);
@@ -127,6 +150,35 @@ export default function AdminDashboard() {
     setPortfolio(updatedPortfolio);
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">관리자 로그인</h2>
+            <p className="text-gray-500 mt-2">비밀번호를 입력해주세요</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              placeholder="Password"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all"
+            >
+              접속하기
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-20 min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -163,6 +215,16 @@ export default function AdminDashboard() {
             <Briefcase className="w-5 h-5" />
             <span>서비스 관리</span>
           </button>
+          
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-3 px-6 py-4 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>로그아웃</span>
+            </button>
+          </div>
         </nav>
       </aside>
 
